@@ -186,7 +186,7 @@ const HelpIntentHandler = {
     return handlerInput.responseBuilder
       .speak(speechText)
       .reprompt(speechText)
-      .withSimpleCard('Hello World', speechText)
+      .withSimpleCard('Alexa Plus Unity Test', speechText)
       .getResponse();
   },
 };
@@ -202,7 +202,7 @@ const CancelAndStopIntentHandler = {
 
     return handlerInput.responseBuilder
       .speak(speechText)
-      .withSimpleCard('Hello World', speechText)
+      .withSimpleCard('Alexa Plus Unity Test', speechText)
       .getResponse();
   },
 };
@@ -290,6 +290,7 @@ async function sendUserId(userId, attributes, handlerInput, response) {
   });
 }
 
+// 
 async function setAttributes(attributes) {
   if (Object.keys(attributes).length === 0) {
     attributes.SETUP_STATE = "STARTED";
