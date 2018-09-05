@@ -33,14 +33,14 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
+lambda/custom/build/Release
 
 # Dependency directories
-node_modules/
-jspm_packages/
+lambda/custom/node_modules/
+lambda/custom/jspm_packages/
 
 # TypeScript v1 declaration files
-typings/
+lambda/custom/typings/
 
 # Optional npm cache directory
 .npm
