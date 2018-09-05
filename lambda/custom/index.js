@@ -5,9 +5,9 @@ const Alexa = require('ask-sdk');
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 var alexaCookbook = require('./alexa-cookbook.js');
-var alexaGaming = require('./alexa-gaming-cookbook.js');
-alexaGaming.setAWS(AWS);
-alexaGaming.setDebug(true);
+var alexaPlusUnity = require('alexaplusunity');
+alexaPlusUnity.setAWS("pub-c-60a2af30-833d-4db1-9e55-a0972ca788e2", "sub-c-9a9dee8a-b14e-11e8-80bd-3226ad0d6938");
+alexaPlusUnity.setDebug(true);
 
 const speechOutputs = {
   launch: {
@@ -100,7 +100,7 @@ const CompletetedFlipSwitchIntentHandler = {
       message: state
     };
 
-    var response = await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+    var response = await alexaPlusUnity.publishEventSimple(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
       return handlerInput.responseBuilder
         .speak(speechText + reprompt)
         .reprompt(reprompt)
@@ -145,7 +145,7 @@ const CompletedChangeColorIntentHandler = {
       message: color
     };
 
-    var response = await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+    var response = await alexaPlusUnity.publishEventSimple(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
       return handlerInput.responseBuilder
         .speak(speechText + reprompt)
         .reprompt(reprompt)
@@ -257,13 +257,11 @@ async function launchSetUp(speechText, reprompt, handlerInput, attributes) {
   const responseBuilder = handlerInput.responseBuilder;
 
   speechText += alexaCookbook.getRandomItem(speechOutputs.launch.speak.setup) + reprompt;
-  var response = await alexaGaming.createQueue(attributes.SQS_QUEUE).then(async (data) => {
-    attributes.SQS_QUEUE_URL = data.QueueUrl.toString();
-
+  var response = await alexaPlusUnity.addChannelToGroup(attributes.PUBNUB_CHANNEL).then(async (data) => {
     var responseToReturn = responseBuilder
       .speak(speechText)
       .reprompt(reprompt)
-      .withSimpleCard('Alexa Plus Unity', "Here is your Player ID: " + attributes.SQS_QUEUE)
+      .withSimpleCard('Alexa Plus Unity', "Here is your Player ID: " + attributes.PUBNUB_CHANNEL)
       .getResponse();
 
     var userId = handlerInput.requestEnvelope.session.user.userId;
@@ -283,7 +281,7 @@ async function sendUserId(userId, attributes, handlerInput, response) {
     type: "AlexaUserId",
     message: userId
   };
-  return await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+  return await alexaPlusUnity.publishEventSimple(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
     return response;
   }).catch((err) => {
     return ErrorHandler.handle(handlerInput, err);
@@ -294,8 +292,7 @@ async function sendUserId(userId, attributes, handlerInput, response) {
 async function setAttributes(attributes) {
   if (Object.keys(attributes).length === 0) {
     attributes.SETUP_STATE = "STARTED";
-    attributes.SQS_QUEUE = await alexaGaming.uniqueQueueGenerator();
-    attributes.SQS_QUEUE_URL = null;
+    attributes.PUBNUB_CHANNEL = await alexaPlusUnity.uniqueQueueGenerator();
     //Add more attributes here that need to be initalized at skill start
   }
   return attributes;
