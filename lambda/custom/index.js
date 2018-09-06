@@ -6,7 +6,7 @@ var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 var alexaCookbook = require('./alexa-cookbook.js');
 var alexaPlusUnity = require('alexaplusunity');
-alexaPlusUnity.setAWS("pub-c-60a2af30-833d-4db1-9e55-a0972ca788e2", "sub-c-9a9dee8a-b14e-11e8-80bd-3226ad0d6938");
+alexaPlusUnity.setPubNub("pub-c-60a2af30-833d-4db1-9e55-a0972ca788e2", "sub-c-9a9dee8a-b14e-11e8-80bd-3226ad0d6938");
 alexaPlusUnity.setDebug(true);
 
 const speechOutputs = {
@@ -257,7 +257,7 @@ async function launchSetUp(speechText, reprompt, handlerInput, attributes) {
   const responseBuilder = handlerInput.responseBuilder;
 
   speechText += alexaCookbook.getRandomItem(speechOutputs.launch.speak.setup) + reprompt;
-  var response = await alexaPlusUnity.addChannelToGroup(attributes.PUBNUB_CHANNEL).then(async (data) => {
+  var response = await alexaPlusUnity.addChannelToGroup(attributes.PUBNUB_CHANNEL, "AlexaPlusUnityTest").then(async (data) => {
     var responseToReturn = responseBuilder
       .speak(speechText)
       .reprompt(reprompt)
