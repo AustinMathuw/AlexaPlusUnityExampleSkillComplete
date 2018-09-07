@@ -45,6 +45,10 @@ const LaunchRequestHandler = {
 
     var attributes = await attributesManager.getPersistentAttributes() || {};
     attributes = await setAttributes(attributes);
+    
+    if(attributes == null) {
+      return ErrorHandler.handle(handlerInput, "Error setting attributes... Check logs");
+    }
 
     var reprompt = alexaCookbook.getRandomItem(speechOutputs.launch.reprompt);
     var speechText = alexaCookbook.getRandomItem(speechOutputs.launch.speak.normal);
@@ -292,7 +296,13 @@ async function sendUserId(userId, attributes, handlerInput, response) {
 async function setAttributes(attributes) {
   if (Object.keys(attributes).length === 0) {
     attributes.SETUP_STATE = "STARTED";
-    attributes.PUBNUB_CHANNEL = await alexaPlusUnity.uniqueQueueGenerator();
+    var newChannel = await alexaPlusUnity.uniqueQueueGenerator("AlexaPlusUnityTest");
+    
+    if(newChannel != null) {
+      attributes.PUBNUB_CHANNEL = newChannel;
+    } else {
+      return null;
+    }
     //Add more attributes here that need to be initalized at skill start
   }
   return attributes;
