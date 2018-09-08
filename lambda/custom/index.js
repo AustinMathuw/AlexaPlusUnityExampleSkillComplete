@@ -158,8 +158,6 @@ const CompletedChangeColorIntentHandler = {
       return ErrorHandler.handle(handlerInput, err);
     });
 
-    console.log(response);
-
     return response;
   },
 };
@@ -221,9 +219,8 @@ const CompletedGetObjectInDirectionIntentHandler = {
     }).catch((err) => {
       return ErrorHandler.handle(handlerInput, err);
     });
-    console.log(response); //Outputs correct response
     
-    return response; //But this does not return
+    return response;
   }
 }
 
