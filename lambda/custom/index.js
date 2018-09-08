@@ -157,6 +157,9 @@ const CompletedChangeColorIntentHandler = {
     }).catch((err) => {
       return ErrorHandler.handle(handlerInput, err);
     });
+
+    console.log(response);
+
     return response;
   },
 };
@@ -208,7 +211,7 @@ const CompletedGetObjectInDirectionIntentHandler = {
       message: direction
     };
 
-    var response = await alexaPlusUnity.publishMessageAndListenToResponse(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
+    var response = await alexaPlusUnity.publishMessageAndListenToResponse(payloadObj, attributes.PUBNUB_CHANNEL, 8000).then((data) => {
       const speechText = 'Currently, ' + data.message.object + ' is ' + direction + ' you!';
       const reprompt = ' What\'s next?';
       return handlerInput.responseBuilder
@@ -218,8 +221,9 @@ const CompletedGetObjectInDirectionIntentHandler = {
     }).catch((err) => {
       return ErrorHandler.handle(handlerInput, err);
     });
+    console.log(response); //Outputs correct response
     
-    return response;
+    return response; //But this does not return
   }
 }
 
