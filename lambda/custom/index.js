@@ -52,18 +52,17 @@ const LaunchRequestHandler = {
     var reprompt = alexaCookbook.getRandomItem(speechOutputs.launch.reprompt);
     var speechText = alexaCookbook.getRandomItem(speechOutputs.launch.speak.normal);
     
-    var response = null;
+    var response = responseBuilder
+        .speak(speechText + reprompt)
+        .reprompt(reprompt)
+        .getResponse();
 
     if(attributes.SETUP_STATE == "STARTED") {
       var launchSetUpResult = await launchSetUp(speechText, reprompt, handlerInput, attributes);
       attributes = launchSetUpResult.attributes;
       response = launchSetUpResult.response;
-    } else {
-      response = responseBuilder
-        .speak(speechText + reprompt)
-        .reprompt(reprompt)
-        .getResponse();
     }
+	
     attributesManager.setPersistentAttributes(attributes);
     await attributesManager.savePersistentAttributes();
     return response;
@@ -156,8 +155,6 @@ const CompletedChangeColorIntentHandler = {
     }).catch((err) => {
       return ErrorHandler.handle(handlerInput, err);
     });
-
-    console.log(response);
 
     return response;
   },
