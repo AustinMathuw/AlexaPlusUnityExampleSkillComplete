@@ -1,0 +1,24 @@
+{
+  "name": "alexaplusunity-example-skill",
+  "version": "1.0.0",
+  "description": "An Example Skill built with AlexaPlusUnity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AustinMathuw/AlexaPlusUnityExampleSkillComplete.git"
+  },
+  "keywords": [],
+  "author": "Austin Wilson",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/AustinMathuw/AlexaPlusUnityExampleSkillComplete/issues"
+  },
+  "homepage": "https://github.com/AustinMathuw/AlexaPlusUnityExampleSkillComplete#readme",
+  "dependencies": {
+    "alexaplusunity": "~0",
+    "ask-sdk": "^2.0.0"
+  }
+}

@@ -3,14 +3,14 @@
     "publishingInformation": {
       "locales": {
         "en-US": {
-          "summary": "AlexaPlusUnity Test Skill",
+          "summary": "Unity Light Control (AlexaPlusUnityTest)",
           "examplePhrases": [
             "Alexa open unity light",
-            "Alexa tell unity light turn on light",
-            "Alexa ask unity light turn off light"
+            "Alexa tell unity light turn off light",
+            "Alexa ask unity light to change color to blue"
           ],
-          "name": "AlexaPlusUnityTest",
-          "description": "AlexaPlusUnity Test Skill"
+          "name": "Unity Light Control (AlexaPlusUnityTest)",
+          "description": "Unity Light Control (AlexaPlusUnityTest)"
         }
       },
       "isAvailableWorldwide": true,

@@ -5,9 +5,8 @@ const Alexa = require('ask-sdk');
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 var alexaCookbook = require('./alexa-cookbook.js');
-var alexaGaming = require('./alexa-gaming-cookbook.js');
-alexaGaming.setAWS(AWS);
-alexaGaming.setDebug(true);
+var alexaPlusUnityClass = require('alexaplusunity');
+var alexaPlusUnity = new alexaPlusUnityClass("<YOUR_PUBNUB_PUB_KEY>", "<YOUR_PUBNUB_SUB_KEY>", true);
 
 const speechOutputs = {
   launch: {
@@ -45,6 +44,10 @@ const LaunchRequestHandler = {
 
     var attributes = await attributesManager.getPersistentAttributes() || {};
     attributes = await setAttributes(attributes);
+    
+    if(attributes == null) {
+      return ErrorHandler.handle(handlerInput, "Error setting attributes... Check logs");
+    }
 
     var reprompt = alexaCookbook.getRandomItem(speechOutputs.launch.reprompt);
     var speechText = alexaCookbook.getRandomItem(speechOutputs.launch.speak.normal);
@@ -100,7 +103,7 @@ const CompletetedFlipSwitchIntentHandler = {
       message: state
     };
 
-    var response = await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+    var response = await alexaPlusUnity.publishMessage(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
       return handlerInput.responseBuilder
         .speak(speechText + reprompt)
         .reprompt(reprompt)
@@ -145,7 +148,7 @@ const CompletedChangeColorIntentHandler = {
       message: color
     };
 
-    var response = await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+    var response = await alexaPlusUnity.publishMessage(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
       return handlerInput.responseBuilder
         .speak(speechText + reprompt)
         .reprompt(reprompt)
@@ -153,6 +156,9 @@ const CompletedChangeColorIntentHandler = {
     }).catch((err) => {
       return ErrorHandler.handle(handlerInput, err);
     });
+
+    console.log(response);
+
     return response;
   },
 };
@@ -172,6 +178,50 @@ const GetColorIntentHandler = {
         .speak(speechText + reprompt)
         .reprompt(reprompt)
         .getResponse();
+  }
+}
+
+const InProgressGetObjectInDirectionIntentHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'IntentRequest' &&
+      request.intent.name === 'GetObjectInDirectionIntent' &&
+      request.dialogState !== 'COMPLETED';
+  },
+  handle(handlerInput) {
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    return handlerInput.responseBuilder
+      .addDelegateDirective(currentIntent)
+      .getResponse();
+  },
+}
+
+const CompletedGetObjectInDirectionIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'GetObjectInDirectionIntent';
+  },
+  async handle(handlerInput) {
+    const direction = handlerInput.requestEnvelope.request.intent.slots.Direction.value;
+    var attributes = await handlerInput.attributesManager.getPersistentAttributes();
+
+    var payloadObj = { 
+      type: "GetObject",
+      message: direction
+    };
+
+    var response = await alexaPlusUnity.publishMessageAndListenToResponse(payloadObj, attributes.PUBNUB_CHANNEL, 4000).then((data) => {
+      const speechText = 'Currently, ' + data.message.object + ' is ' + direction + ' you!';
+      const reprompt = ' What\'s next?';
+      return handlerInput.responseBuilder
+        .speak(speechText + reprompt)
+        .reprompt(reprompt)
+        .getResponse();
+    }).catch((err) => {
+      return ErrorHandler.handle(handlerInput, err);
+    });
+    
+    return response;
   }
 }
 
@@ -244,6 +294,8 @@ exports.handler = skillBuilder
     InProgressChangeColorIntentHandler,
     CompletedChangeColorIntentHandler,
     GetColorIntentHandler,
+    InProgressGetObjectInDirectionIntentHandler,
+    CompletedGetObjectInDirectionIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
     SessionEndedRequestHandler
@@ -257,13 +309,11 @@ async function launchSetUp(speechText, reprompt, handlerInput, attributes) {
   const responseBuilder = handlerInput.responseBuilder;
 
   speechText += alexaCookbook.getRandomItem(speechOutputs.launch.speak.setup) + reprompt;
-  var response = await alexaGaming.createQueue(attributes.SQS_QUEUE).then(async (data) => {
-    attributes.SQS_QUEUE_URL = data.QueueUrl.toString();
-
+  var response = await alexaPlusUnity.addChannelToGroup(attributes.PUBNUB_CHANNEL, "AlexaPlusUnityTest").then(async (data) => {
     var responseToReturn = responseBuilder
       .speak(speechText)
       .reprompt(reprompt)
-      .withSimpleCard('Alexa Plus Unity', "Here is your Player ID: " + attributes.SQS_QUEUE)
+      .withSimpleCard('Alexa Plus Unity', "Here is your Player ID: " + attributes.PUBNUB_CHANNEL)
       .getResponse();
 
     var userId = handlerInput.requestEnvelope.session.user.userId;
@@ -283,19 +333,23 @@ async function sendUserId(userId, attributes, handlerInput, response) {
     type: "AlexaUserId",
     message: userId
   };
-  return await alexaGaming.publishEventSimple(JSON.stringify(payloadObj), attributes.SQS_QUEUE_URL).then((data) => {
+  return await alexaPlusUnity.publishMessage(payloadObj, attributes.PUBNUB_CHANNEL).then((data) => {
     return response;
   }).catch((err) => {
     return ErrorHandler.handle(handlerInput, err);
   });
 }
 
-// 
 async function setAttributes(attributes) {
   if (Object.keys(attributes).length === 0) {
     attributes.SETUP_STATE = "STARTED";
-    attributes.SQS_QUEUE = await alexaGaming.uniqueQueueGenerator();
-    attributes.SQS_QUEUE_URL = null;
+    var newChannel = await alexaPlusUnity.uniqueQueueGenerator("AlexaPlusUnityTest");
+    
+    if(newChannel != null) {
+      attributes.PUBNUB_CHANNEL = newChannel;
+    } else {
+      return null;
+    }
     //Add more attributes here that need to be initalized at skill start
   }
   return attributes;
