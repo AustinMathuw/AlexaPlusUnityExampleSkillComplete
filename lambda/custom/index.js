@@ -5,9 +5,8 @@ const Alexa = require('ask-sdk');
 var AWS = require('aws-sdk');
 AWS.config.update({region: 'us-east-1'});
 var alexaCookbook = require('./alexa-cookbook.js');
-var alexaPlusUnity = require('alexaplusunity');
-alexaPlusUnity.setPubNub("pub-c-60a2af30-833d-4db1-9e55-a0972ca788e2", "sub-c-9a9dee8a-b14e-11e8-80bd-3226ad0d6938");
-alexaPlusUnity.setDebug(true);
+var alexaPlusUnityClass = require('alexaplusunity');
+var alexaPlusUnity = new alexaPlusUnityClass("<YOUR_PUBNUB_PUB_KEY>", "<YOUR_PUBNUB_SUB_KEY>", true);
 
 const speechOutputs = {
   launch: {
@@ -158,6 +157,8 @@ const CompletedChangeColorIntentHandler = {
       return ErrorHandler.handle(handlerInput, err);
     });
 
+    console.log(response);
+
     return response;
   },
 };
@@ -209,7 +210,7 @@ const CompletedGetObjectInDirectionIntentHandler = {
       message: direction
     };
 
-    var response = await alexaPlusUnity.publishMessageAndListenToResponse(payloadObj, attributes.PUBNUB_CHANNEL, 8000).then((data) => {
+    var response = await alexaPlusUnity.publishMessageAndListenToResponse(payloadObj, attributes.PUBNUB_CHANNEL, 4000).then((data) => {
       const speechText = 'Currently, ' + data.message.object + ' is ' + direction + ' you!';
       const reprompt = ' What\'s next?';
       return handlerInput.responseBuilder
@@ -339,7 +340,6 @@ async function sendUserId(userId, attributes, handlerInput, response) {
   });
 }
 
-// 
 async function setAttributes(attributes) {
   if (Object.keys(attributes).length === 0) {
     attributes.SETUP_STATE = "STARTED";
